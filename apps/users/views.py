@@ -22,20 +22,27 @@ class RegisterAPIView(APIView):
 
 
 class LoginAPIView(APIView):
-    serializer_class = LoginSerializer
-    permission_classes = [AllowAny]
+  permission_classes = [AllowAny]
+  serializer_class = LoginSerializer
 
-    @extend_schema(tags=['Users'],  summary='login api')
-    def post(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            username = serializer.validated_data.get('username')
-            password = serializer.validated_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user:
-                token, _ = Token.objects.get_or_create(user=user)
-                return Response({'token':token.key, 'username':user.username})
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+  @extend_schema(tags=['Users'], summary='Login Api')
+  def post(self, request):
+    serializer = self.serializer_class(data=request.data)
+    if serializer.is_valid():
+      username = serializer.validated_data.get('username')
+      password = serializer.validated_data.get('password')
+      user = authenticate(username=username, password=password)
+      if user:
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key})
+      return Response(
+                {'error': 'Invalid username or password'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class MyAPIView(APIView):
     serializer_class = MySerializers
